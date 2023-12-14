@@ -155,23 +155,23 @@ void Application::DjiUser_SetupEnvironment()
 
     returnCode = DjiPlatform_RegOsalHandler(&osalHandler);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("Register osal handler error.");
+        ROS_ERROR("Register osal handler error.");
     }
 
     returnCode = DjiPlatform_RegHalUartHandler(&uartHandler);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("Register hal uart handler error.");
+        ROS_ERROR("Register hal uart handler error.");
     }
 
 #if (CONFIG_HARDWARE_CONNECTION == DJI_USE_UART_AND_USB_BULK_DEVICE)
     returnCode = DjiPlatform_RegHalUsbBulkHandler(&usbBulkHandler);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("Register hal usb bulk handler error.");
+        ROS_ERROR("Register hal usb bulk handler error.");
     }
 #elif (CONFIG_HARDWARE_CONNECTION == DJI_USE_UART_AND_NETWORK_DEVICE)
     returnCode = DjiPlatform_RegHalNetworkHandler(&networkHandler);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("Register hal network handler error");
+        ROS_ERROR("Register hal network handler error");
     }
 #elif (CONFIG_HARDWARE_CONNECTION == DJI_USE_ONLY_UART)
     /*!< Attention: Only use uart hardware connection.
@@ -181,26 +181,26 @@ void Application::DjiUser_SetupEnvironment()
     //Attention: if you want to use camera stream view function, please uncomment it.
     returnCode = DjiPlatform_RegSocketHandler(&socketHandler);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("register osal socket handler error");
+        ROS_ERROR("register osal socket handler error");
     }
 
     returnCode = DjiPlatform_RegFileSystemHandler(&fileSystemHandler);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("Register osal filesystem handler error.");
+        ROS_ERROR("Register osal filesystem handler error.");
     }
 
     if (DjiUser_LocalWriteFsInit(DJI_LOG_PATH) != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("File system init error.");
+        ROS_ERROR("File system init error.");
     }
 
     returnCode = DjiLogger_AddConsole(&printConsole);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("Add printf console error.");
+        ROS_ERROR("Add printf console error.");
     }
 
     returnCode = DjiLogger_AddConsole(&localRecordConsole);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("Add printf console error.");
+        ROS_ERROR("Add printf console error.");
     }
 }
 
@@ -221,41 +221,41 @@ void Application::DjiUser_ApplicationStart()
 
     returnCode = DjiUser_FillInUserInfo(&userInfo);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("Fill user info error, please check user info config.");
+        ROS_ERROR("Fill user info error, please check user info config.");
     }
 
     returnCode = DjiCore_Init(&userInfo);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("Core init error.");
+        ROS_ERROR("Core init error.");
     }
 
     returnCode = DjiAircraftInfo_GetBaseInfo(&aircraftInfoBaseInfo);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("Get aircraft base info error.");
+        ROS_ERROR("Get aircraft base info error.");
     }
 
     if (aircraftInfoBaseInfo.mountPosition != DJI_MOUNT_POSITION_EXTENSION_PORT) {
-        throw std::runtime_error("Please run this sample on extension port.");
+        ROS_ERROR("Please run this sample on extension port.");
     }
 
     returnCode = DjiCore_SetAlias("PSDK_APPALIAS");
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("Set alias error.");
+        ROS_ERROR("Set alias error.");
     }
 
     returnCode = DjiCore_SetFirmwareVersion(firmwareVersion);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("Set firmware version error.");
+        ROS_ERROR("Set firmware version error.");
     }
 
     returnCode = DjiCore_SetSerialNumber("PSDK12345678XX");
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("Set serial number error");
+        ROS_ERROR("Set serial number error");
     }
 
     returnCode = DjiCore_ApplicationStart();
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-        throw std::runtime_error("Start sdk application error.");
+        ROS_ERROR("Start sdk application error.");
     }
 
     USER_LOG_INFO("Application start.");
@@ -300,7 +300,7 @@ T_DjiReturnCode Application::DjiUser_FillInUserInfo(T_DjiUserInfo *userInfo)
         strlen(USER_APP_LICENSE) > sizeof(userInfo->appLicense) ||
         strlen(USER_DEVELOPER_ACCOUNT) >= sizeof(userInfo->developerAccount) ||
         strlen(USER_BAUD_RATE) > sizeof(userInfo->baudRate)) {
-        USER_LOG_ERROR("Length of user information string is beyond limit. Please check.");
+        ROS_ERROR("Length of user information string is beyond limit. Please check.");
         return DJI_ERROR_SYSTEM_MODULE_CODE_INVALID_PARAMETER;
     }
 
@@ -310,7 +310,7 @@ T_DjiReturnCode Application::DjiUser_FillInUserInfo(T_DjiUserInfo *userInfo)
         !strcmp(USER_BAUD_RATE, "your_app_license") ||
         !strcmp(USER_DEVELOPER_ACCOUNT, "your_developer_account") ||
         !strcmp(USER_BAUD_RATE, "your_baud_rate")) {
-        USER_LOG_ERROR(
+        ROS_ERROR(
             "Please fill in correct user information to 'samples/sample_c++/platform/linux/manifold2/application/dji_sdk_app_info.h' file.");
         return DJI_ERROR_SYSTEM_MODULE_CODE_INVALID_PARAMETER;
     }
@@ -395,7 +395,7 @@ T_DjiReturnCode Application::DjiUser_LocalWriteFsInit(const char *path)
 
     s_djiLogFile = fopen(filePath, "wb+");
     if (s_djiLogFile == nullptr) {
-        USER_LOG_ERROR("Open filepath time error.");
+        ROS_ERROR("Open filepath time error.");
         return DJI_ERROR_SYSTEM_MODULE_CODE_SYSTEM_ERROR;
     }
 

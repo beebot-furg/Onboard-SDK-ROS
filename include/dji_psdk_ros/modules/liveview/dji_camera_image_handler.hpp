@@ -1,9 +1,10 @@
 /**
  ********************************************************************
- * @file    dji_sdk_app_info.h
- * @brief   This is the header file for defining the structure and (exported) function prototypes.
+ * @file    dji_camera_image_handler.hpp
+ * @brief   This is the header file for "dji_camera_image_handler.cpp", defining the structure and
+ * (exported) function prototypes.
  *
- * @copyright (c) 2018 DJI. All rights reserved.
+ * @copyright (c) 2021 DJI. All rights reserved.
  *
  * All information contained herein is, and remains, the property of DJI.
  * The intellectual and technical concepts contained herein are proprietary
@@ -23,32 +24,51 @@
  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef DJI_SDK_APP_INFO_H
-#define DJI_SDK_APP_INFO_H
+#ifndef DJI_CAMERA_IMAGE_HANDLER_H
+#define DJI_CAMERA_IMAGE_HANDLER_H
 
 /* Includes ------------------------------------------------------------------*/
+#include "pthread.h"
+#include <cstdint>
+#include <vector>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Exported constants --------------------------------------------------------*/
-// ATTENTION: User must goto https://developer.dji.com/user/apps/#all to create your own dji sdk application, get dji sdk application
-// information then fill in the application information here.
-#define USER_APP_NAME               "BeebotOPSDK"
-#define USER_APP_ID                 "137141"
-#define USER_APP_KEY                "21a52c6f5efda6c9b9fefe6906806b9"
-#define USER_APP_LICENSE            "eE40oYBAAng5KvaqPP49nN55ZNRMBsdvneDPJCTXEOGksy1hyB5XkbcTsCszraoHqYZCppKU6u9+6ndsuFlMLfTmSwZ+Y8FMMJBxBys34c7LSIZFG0jYi6ASNQs0yb7rpSpKnB49JNK8kKokGwleKt7ahZ4cScYy2ISEQbVP2I/snZBzw86BkbUNUL6nSfhCD/E4IfWh8TnIEGqRH6d0d435JDRfnQRWAytYQREzM2J70oetUs/MpNelblJ8PZtSXFFhDtOQ0NPwlxk9nxdZTkFVx4MgJDPxT4iqT5ZuBYsLWgGPQ7myFueFwoc11H4+U39p3ag8uG3P6Ioe+aSFsA=="
-#define USER_DEVELOPER_ACCOUNT      "beebot.deploy@gmail.com"
-#define USER_BAUD_RATE              "921600"
+
 /* Exported types ------------------------------------------------------------*/
+struct CameraRGBImage {
+    std::vector<uint8_t> rawData;
+    int height;
+    int width;
+};
+
+typedef void (*CameraImageCallback)(CameraRGBImage pImg, void *userData);
+
+typedef void (*H264Callback)(const uint8_t *buf, int bufLen, void *userData);
+
+class DJICameraImageHandler {
+public:
+    DJICameraImageHandler();
+    ~DJICameraImageHandler();
+
+    void writeNewImageWithLock(uint8_t *buf, int bufSize, int width, int height);
+    bool getNewImageWithLock(CameraRGBImage &copyOfImage, int timeoutMilliSec);
+
+private:
+    pthread_mutex_t m_mutex;
+    pthread_cond_t m_condv;
+    CameraRGBImage m_img;
+    bool m_newImageFlag;
+};
 
 /* Exported functions --------------------------------------------------------*/
-
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // DJI_SDK_APP_INFO_H
+#endif // DJI_CAMERA_IMAGE_HANDLER_H
 /************************ (C) COPYRIGHT DJI Innovations *******END OF FILE******/

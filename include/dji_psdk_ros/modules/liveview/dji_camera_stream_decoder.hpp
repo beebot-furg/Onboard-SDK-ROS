@@ -1,9 +1,10 @@
 /**
  ********************************************************************
- * @file    dji_sdk_app_info.h
- * @brief   This is the header file for defining the structure and (exported) function prototypes.
+ * @file    dji_camera_stream_decoder.hpp
+ * @brief   This is the header file for "dji_camera_stream_decoder.cpp", defining the structure and
+ * (exported) function prototypes.
  *
- * @copyright (c) 2018 DJI. All rights reserved.
+ * @copyright (c) 2021 DJI. All rights reserved.
  *
  * All information contained herein is, and remains, the property of DJI.
  * The intellectual and technical concepts contained herein are proprietary
@@ -23,32 +24,78 @@
  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef DJI_SDK_APP_INFO_H
-#define DJI_SDK_APP_INFO_H
+#ifndef DJI_CAMERA_STREAM_DECCODER_H
+#define DJI_CAMERA_STREAM_DECCODER_H
 
 /* Includes ------------------------------------------------------------------*/
+extern "C" {
+#ifdef FFMPEG_INSTALLED
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
+#endif
+}
+
+#include "pthread.h"
+#include "dji_camera_image_handler.hpp"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Exported constants --------------------------------------------------------*/
-// ATTENTION: User must goto https://developer.dji.com/user/apps/#all to create your own dji sdk application, get dji sdk application
-// information then fill in the application information here.
-#define USER_APP_NAME               "BeebotOPSDK"
-#define USER_APP_ID                 "137141"
-#define USER_APP_KEY                "21a52c6f5efda6c9b9fefe6906806b9"
-#define USER_APP_LICENSE            "eE40oYBAAng5KvaqPP49nN55ZNRMBsdvneDPJCTXEOGksy1hyB5XkbcTsCszraoHqYZCppKU6u9+6ndsuFlMLfTmSwZ+Y8FMMJBxBys34c7LSIZFG0jYi6ASNQs0yb7rpSpKnB49JNK8kKokGwleKt7ahZ4cScYy2ISEQbVP2I/snZBzw86BkbUNUL6nSfhCD/E4IfWh8TnIEGqRH6d0d435JDRfnQRWAytYQREzM2J70oetUs/MpNelblJ8PZtSXFFhDtOQ0NPwlxk9nxdZTkFVx4MgJDPxT4iqT5ZuBYsLWgGPQ7myFueFwoc11H4+U39p3ag8uG3P6Ioe+aSFsA=="
-#define USER_DEVELOPER_ACCOUNT      "beebot.deploy@gmail.com"
-#define USER_BAUD_RATE              "921600"
+
 /* Exported types ------------------------------------------------------------*/
+class DJICameraStreamDecoder {
+public:
+    DJICameraStreamDecoder();
+    ~DJICameraStreamDecoder();
+    bool init();
+    void cleanup();
+
+    void callbackThreadFunc();
+    void decodeBuffer(const uint8_t *pBuf, int len);
+    static void *callbackThreadEntry(void *p);
+    bool registerCallback(CameraImageCallback f, void *param);
+    DJICameraImageHandler decodedImageHandler;
+
+private:
+    pthread_t callbackThread;
+    bool initSuccess;
+    bool cbThreadIsRunning;
+    int cbThreadStatus;
+    CameraImageCallback cb;
+    void *cbUserParam;
+
+    pthread_mutex_t decodemutex;
+
+#ifdef FFMPEG_INSTALLED
+    AVCodecContext *pCodecCtx;
+    AVCodec *pCodec;
+    AVCodecParserContext *pCodecParserCtx;
+    SwsContext *pSwsCtx;
+
+    AVFrame *pFrameYUV;
+    AVFrame *pFrameRGB;
+#endif
+    uint8_t *rgbBuf;
+    size_t bufSize;
+};
 
 /* Exported functions --------------------------------------------------------*/
-
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // DJI_SDK_APP_INFO_H
+#endif // DJI_CAMERA_STREAM_DECCODER_H
 /************************ (C) COPYRIGHT DJI Innovations *******END OF FILE******/
+
+
+
+
+
+
+
+
+

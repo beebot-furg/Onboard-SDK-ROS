@@ -5,11 +5,21 @@
 #include <ros/ros.h>
 #include <memory>
 #include <string>
+#include <map>
 
-// PSDK include
-#include "modules/application.hpp"
+//! PSDK
 #include "dji_aircraft_info.h"
 #include "dji_platform.h"
+#include "dji_liveview.h"
+#include "dji_logger.h"
+#include "dji_typedef.h"
+#include "dji_fc_subscription.h"
+#include "dji_aircraft_info.h"
+
+//! PSDK Local Modules
+#include "dji_psdk_ros/modules/application.hpp"
+#include "dji_psdk_ros/modules/liveview/dji_camera_stream_decoder.hpp"
+#include "dji_psdk_ros/modules/liveview/test_liveview.hpp"
 
 //! ROS standard msgs
 #include <tf/tf.h>
@@ -45,6 +55,7 @@
 #include <dji_osdk_ros/ObtainControlAuthority.h>
 #include <dji_osdk_ros/KillSwitch.h>
 #include <dji_osdk_ros/EmergencyBrake.h>
+
 //Gimbal control services
 #include <dji_osdk_ros/GimbalAction.h>
 
@@ -66,11 +77,14 @@
 
 //HMS services
 #include <dji_osdk_ros/GetHMSData.h>
+
 //mfio services
 #include <dji_osdk_ros/MFIO.h>
+
 //MOP services
 #include <dji_osdk_ros/SendMobileData.h>
 #include <dji_osdk_ros/SendPayloadData.h>
+
 //mission services
 #include <dji_osdk_ros/MissionStatus.h>
 #include <dji_osdk_ros/MissionWpUpload.h>
@@ -84,6 +98,7 @@
 #include <dji_osdk_ros/MissionHpUpdateYawRate.h>
 #include <dji_osdk_ros/MissionHpResetYaw.h>
 #include <dji_osdk_ros/MissionHpUpdateRadius.h>
+
 //battery services
 #include <dji_osdk_ros/GetWholeBatteryInfo.h>
 #include <dji_osdk_ros/GetSingleBatteryDynamicInfo.h>
@@ -103,14 +118,13 @@
 #include <dji_osdk_ros/SubscribeWaypointV2Event.h>
 #include <dji_osdk_ros/SubscribeWaypointV2State.h>
 
-#ifdef ADVANCED_SENSING
+//! Camera
 #include <dji_osdk_ros/SetupCameraH264.h>
 #include <dji_osdk_ros/SetupCameraStream.h>
 #include <dji_osdk_ros/Stereo240pSubscription.h>
 #include <dji_osdk_ros/StereoDepthSubscription.h>
 #include <dji_osdk_ros/StereoVGASubscription.h>
 #include <dji_osdk_ros/GetM300StereoParams.h>
-#endif
 
 /*! msgs */
 #include <dji_osdk_ros/Gimbal.h>
@@ -162,16 +176,29 @@ namespace dji_psdk_ros
       // bool initGimbalModule();
       // bool initCameraModule();
       void initService();
-      // bool initTopic();
+      bool initTopic();
       // bool initDataSubscribeFromFC();
       // bool cleanUpSubscribeFromFC();
+
+      // This shoud be done in another class
+      // bool startFPVCameraStream(CameraImageCallback callback, void *userData);
+      // bool stopFPVCameraStream();
+
+      // bool startMainCameraStream(CameraImageCallback callback, void *userData);
+      // bool stopMainCameraStream();
+
     protected:
       /*! services */
 
       /*! for general */
       ros::ServiceServer get_drone_type_server_;
       ros::ServiceServer get_whole_battery_info_server_;
+      ros::ServiceServer setup_camera_stream_server_;
 
+      ros::Publisher main_camera_stream_publisher_;
+      ros::Publisher fpv_camera_stream_publisher_;
+
+      ros::Publisher attitude_publisher_;
 
     protected:
       /*! for general */
@@ -181,10 +208,16 @@ namespace dji_psdk_ros
       bool getWholeBatteryInfoCallback(dji_osdk_ros::GetWholeBatteryInfo::Request& request,
                                        dji_osdk_ros::GetWholeBatteryInfo::Response& reponse);
 
+      bool setupCameraStreamCallback(dji_osdk_ros::SetupCameraStream::Request& request,
+                                     dji_osdk_ros::SetupCameraStream::Response& response);
+
     private:
       ros::NodeHandle nh_;
 
       Application *application;
+
+      static void publishMainCameraImage(CameraRGBImage rgbImg, void* userData);
+      static void publishFPVCameraImage(CameraRGBImage rgbImg, void* userData);
   };
 }
 #endif // __DJI_PSDK_NODE_HH__

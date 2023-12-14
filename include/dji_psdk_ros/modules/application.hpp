@@ -32,6 +32,7 @@
 #include <fstream>
 #include "dji_typedef.h"
 #include "dji_core.h"
+#include <ros/ros.h>
 
 #ifdef __cplusplus
 extern "C" {
